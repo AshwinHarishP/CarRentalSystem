@@ -24,4 +24,15 @@ class Lease:
 
     def get_type(self): return self.__type
     def set_type(self, type): self.__type = type
+
+    def __str__(self):
+        return (
+            f"Lease ID: {self.__leaseID}\n"
+            f"Vehicle ID: {self.__vehicleID}\n"
+            f"Customer ID: {self.__customerID}\n"
+            f"Start Date: {self.__startDate}\n"
+            f"End Date: {self.__endDate}\n"
+            f"Lease Type {self.__type}\n"
+            )
+
     

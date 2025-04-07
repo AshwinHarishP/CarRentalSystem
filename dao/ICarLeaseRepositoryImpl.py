@@ -41,19 +41,32 @@ class ICarLeaseRepositoryImpl(ICarLeaseRepository):
     
     def removeCar(self, car_id: int) -> None:
         """
-            Function to remove Car
+        Function to remove a car after deleting related leases and payments.
         """
-
+        
         try:
-            query = "DELETE FROM Vehicle WHERE vehicleID = ?;"
-           
-            self.cursor.execute(query, (car_id))
+            # Check for leases associated with the car
+            self.cursor.execute("SELECT leaseID FROM Lease WHERE vehicleID = ?;", (car_id,))
+            leases = self.cursor.fetchall()
+
+            for lease in leases:
+                lease_id = lease[0]
+
+                # Delete payments linked to each lease
+                self.cursor.execute("DELETE FROM Payment WHERE leaseID = ?;", (lease_id,))
+
+                # Delete the lease
+                self.cursor.execute("DELETE FROM Lease WHERE leaseID = ?;", (lease_id,))
+
+            # Delete the vehicle
+            self.cursor.execute("DELETE FROM Vehicle WHERE vehicleID = ?;", (car_id,))
             self.connection.commit()
             return True
-           
+
         except Exception as Error:
-             print(f"Error in deleting a car: {Error}")
-             return False
+            print(f"Error in deleting a car: {Error}")
+            return False
+
 
     
     def listAvailableCars(self) -> list[Vehicle]:
@@ -67,21 +80,8 @@ class ICarLeaseRepositoryImpl(ICarLeaseRepository):
            
             self.cursor.execute(query)
             rows = self.cursor.fetchall()
-            cars = []
-            for row in rows:
-                car = Vehicle(
-                    vehicleID=row[0],
-                    make=row[1],
-                    model=row[2],
-                    year=row[3],
-                    dailyRate=row[4],
-                    status=row[5],
-                    passengerCapacity=row[6],
-                    engineCapacity=row[7]
-                )
-                cars.append(car)
-            return cars
-            
+            return [Vehicle(*row) for row in rows]
+           
         except Exception as Error:
              print(f"Error in displaying all the available cars: {Error}")
              return []
@@ -113,7 +113,7 @@ class ICarLeaseRepositoryImpl(ICarLeaseRepository):
             query = "SELECT * FROM Vehicle WHERE vehicleID = ?;"
                     
            
-            self.cursor.execute(query, (car_id))
+            self.cursor.execute(query, (car_id, ))
             row = self.cursor.fetchone()
 
             if row:
@@ -126,14 +126,15 @@ class ICarLeaseRepositoryImpl(ICarLeaseRepository):
 
     
     def addCustomer(self, customer: Customer) -> None:
+        
         """
             Function to add a customer
         """
 
         try:
             query = """
-                    INSERT INTO Customer (customerID, firstName, lastName, email, phoneNumber) 
-                    VALUES(?, ?, ?, ?, ?);
+                        INSERT INTO Customer (customerID, firstName, lastName, email, phoneNumber) 
+                        VALUES(?, ?, ?, ?, ?);
                     """
            
             self.cursor.execute(query, (
@@ -154,21 +155,12 @@ class ICarLeaseRepositoryImpl(ICarLeaseRepository):
 
     
     def removeCustomer(self, customer_id: int) -> bool:
+       
         """
-        Removes a customer by first checking if they exist,
-        then deleting related payments, lease, and the customer.
+            Removes a customer by first deleting related payments, then lease, then customer.
         """
         
         try:
-            # Check if customer exists
-            check_customer_query = "SELECT * FROM Customer WHERE customerID = ?;"
-            self.cursor.execute(check_customer_query, (customer_id,))
-            customer_row = self.cursor.fetchone()
-
-            if not customer_row:
-                print(f"Customer with ID {customer_id} does not exist.")
-                return False
-
             # Check if lease exists for the customer
             check_lease_query = "SELECT leaseID FROM Lease WHERE customerID = ?;"
             self.cursor.execute(check_lease_query, (customer_id,))
@@ -195,7 +187,6 @@ class ICarLeaseRepositoryImpl(ICarLeaseRepository):
         except Exception as Error:
             print(f"Error in deleting customer {customer_id}: {Error}")
             return False
-
 
     
     def listCustomers(self) -> list[Customer]:
@@ -293,9 +284,14 @@ class ICarLeaseRepositoryImpl(ICarLeaseRepository):
             row = self.cursor.fetchone()
 
             if row:
-                return Lease(lease_id, row[0], row[4], row[5], row[6], row[7])
-            else:
-                return None
+                lease = Lease(leaseID=lease_id, vehicleID=row[0], customerID=row[4], startDate=row[5], endDate=row[6], type=row[7])
+                vehicle_details = {
+                "make": row[1],
+                "model": row[2],
+                "year": row[3]
+            }
+                return lease, vehicle_details
+            return None, None
 
         except Exception as Error:
             print(f"Error in returning a  car based on lease ID {lease_id}: {Error}")
@@ -338,12 +334,19 @@ class ICarLeaseRepositoryImpl(ICarLeaseRepository):
 
     
     def recordPayment(self, lease: Lease, amount: float) -> None:
+    
         """
-            Inserting a record for payment
+            Insert a record for payment after verifying the lease exists.
         """
-
+        
         try:
-            # Get the next paymentID 
+            # Check if the leaseID exists
+            self.cursor.execute("SELECT 1 FROM Lease WHERE leaseID = ?;", (lease.get_leaseID(),))
+            if not self.cursor.fetchone():
+                print(f"Error: Lease ID {lease.get_leaseID()} does not exist.")
+                return False
+
+            # Get the next paymentID
             self.cursor.execute("SELECT MAX(paymentID) FROM Payment;")
             result = self.cursor.fetchone()
             payment_id = result[0] + 1 if result and result[0] is not None else 1
@@ -361,5 +364,6 @@ class ICarLeaseRepositoryImpl(ICarLeaseRepository):
         except Exception as Error:
             print(f"Error in recording payment: {Error}")
             return False
+
 
 

@@ -5,10 +5,7 @@ from entity.LeaseManagement import Lease
 from entity.PaymentHandling import Payment
 from datetime import date
 
-def main():
-    repo = ICarLeaseRepositoryImpl()  
-
-    while True:
+def displayMenu():
         print("\n==== Car Rental System ====")
         print("1. Add Car")
         print("2. Remove Car")
@@ -26,6 +23,12 @@ def main():
         print("14. Record Payment")
         print("15. Exit")
 
+def main():
+    repo = ICarLeaseRepositoryImpl()  
+    displayMenu()
+
+    while True:
+        
         choice = input("\nEnter your choice: ")
 
         if choice == "1":
@@ -45,6 +48,11 @@ def main():
         
         elif choice == "2":
             car_id = int(input("Enter car ID to remove: "))
+
+            if not repo.findCarById(car_id):
+                print("Car with car id: ", car_id, "is not exist")
+                continue
+
             if repo.removeCar(car_id):
                 print("Car Removed Successfully")
             else:
@@ -90,6 +98,11 @@ def main():
 
         elif choice == "7":
             cust_id = int(input("Enter customer ID to remove: "))
+            
+            if not repo.findCustomerById(cust_id):
+                print("Customer with customer id:",cust_id, "Not found")
+                continue
+
             if repo.removeCustomer(cust_id):
                 print("Customer removed successfully")
             else:
@@ -102,39 +115,87 @@ def main():
                 print("-" * 30)
                 print(customer)
 
+
         elif choice == "9":
             cust_id = int(input("Enter customer ID: "))
+            if not repo.findCustomerById(cust_id):
+                print("Customer with customer id:", cust_id, "is not found")
+                continue
+
             cust = repo.findCustomerById(cust_id)
             print(cust)
 
+
         elif choice == "10":
-            cust_id = int(input("Enter customer ID: "))
+            customer_id = int(input("Enter customer ID: "))
             car_id = int(input("Enter car ID: "))
-            start = input("Enter start date (YYYY-MM-DD): ")
-            end = input("Enter end date (YYYY-MM-DD): ")
-            lease = repo.createLease(cust_id, car_id, date.fromisoformat(start), date.fromisoformat(end))
-            print(lease)
+
+            if not repo.findCustomerById(customer_id):
+                print("Customer id not found")
+                continue
+
+            elif not repo.findCarById(car_id):
+                print("car id not found")
+                continue
+            
+            else:
+                start = input("Enter start date (YYYY-MM-DD): ")
+                end = input("Enter end date (YYYY-MM-DD): ")
+                print(" \n1. Monthy Lease \n2. Daily Lease")
+                leaseInput = input("Enter Lease Type: ")
+                
+                if leaseInput == "1":
+                    leaseType = "Monthly Lease"
+                else:
+                    leaseType = "Daily Lease"
+
+                lease = repo.createLease(customer_id, car_id, date.fromisoformat(start), date.fromisoformat(end), leaseType)
+                if lease:
+                    print("Lease Created Successfully")
+                else:
+                    print("Error in creating a lease")
+
 
         elif choice == "11":
             lease_id = int(input("Enter lease ID: "))
-            lease = repo.returnCar(lease_id)
-            print("Car returned:", lease)
+            lease, vehicle = repo.returnCar(lease_id)
+
+            if lease:
+                print("\n\nLease Details\n")
+                print("Lease ID:", lease.get_leaseID())
+                print("Vehicle ID:", lease.get_vehicleID())
+                print("Customer ID:", lease.get_customerID())
+                print("Start Date:", lease.get_startDate())
+                print("End Date:", lease.get_endDate())
+                print("Lease Type:", lease.get_type())
+                
+                print("\n\nVehicle Info\n")
+                print("Make:", vehicle["make"])
+                print("Model:", vehicle["model"])
+                print("Year:", vehicle["year"])
+            else:
+                print("No lease found with that ID.")
 
         elif choice == "12":
             leases = repo.listActiveLeases()
             for lease in leases:
+                print("-" * 30)
                 print(lease)
 
         elif choice == "13":
             leases = repo.listLeaseHistory()
             for lease in leases:
+                print("-" * 30)
                 print(lease)
 
         elif choice == "14":
             lease_id = int(input("Enter lease ID: "))
             amount = float(input("Enter payment amount: "))
             payment = Payment(None, lease_id, amount, date.today())
-            repo.recordPayment(payment, amount)
+            if repo.recordPayment(payment, amount):
+                print("Amount added in Payments")
+            else:
+                print("Unable to add payment")
 
         elif choice == "15":
             print("Thank You for Visiting\n")
