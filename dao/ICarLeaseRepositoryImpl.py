@@ -67,8 +67,21 @@ class ICarLeaseRepositoryImpl(ICarLeaseRepository):
            
             self.cursor.execute(query)
             rows = self.cursor.fetchall()
-            return [Vehicle(*row) for row in rows]
-           
+            cars = []
+            for row in rows:
+                car = Vehicle(
+                    vehicleID=row[0],
+                    make=row[1],
+                    model=row[2],
+                    year=row[3],
+                    dailyRate=row[4],
+                    status=row[5],
+                    passengerCapacity=row[6],
+                    engineCapacity=row[7]
+                )
+                cars.append(car)
+            return cars
+            
         except Exception as Error:
              print(f"Error in displaying all the available cars: {Error}")
              return []
@@ -101,7 +114,7 @@ class ICarLeaseRepositoryImpl(ICarLeaseRepository):
                     
            
             self.cursor.execute(query, (car_id))
-            row = self.cursor.fetchall()
+            row = self.cursor.fetchone()
 
             if row:
                 return Vehicle(*row)
@@ -142,10 +155,20 @@ class ICarLeaseRepositoryImpl(ICarLeaseRepository):
     
     def removeCustomer(self, customer_id: int) -> bool:
         """
-        Removes a customer by first deleting related payments, then lease, then customer.
+        Removes a customer by first checking if they exist,
+        then deleting related payments, lease, and the customer.
         """
         
         try:
+            # Check if customer exists
+            check_customer_query = "SELECT * FROM Customer WHERE customerID = ?;"
+            self.cursor.execute(check_customer_query, (customer_id,))
+            customer_row = self.cursor.fetchone()
+
+            if not customer_row:
+                print(f"Customer with ID {customer_id} does not exist.")
+                return False
+
             # Check if lease exists for the customer
             check_lease_query = "SELECT leaseID FROM Lease WHERE customerID = ?;"
             self.cursor.execute(check_lease_query, (customer_id,))
@@ -172,6 +195,7 @@ class ICarLeaseRepositoryImpl(ICarLeaseRepository):
         except Exception as Error:
             print(f"Error in deleting customer {customer_id}: {Error}")
             return False
+
 
     
     def listCustomers(self) -> list[Customer]:

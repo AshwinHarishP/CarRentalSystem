@@ -54,17 +54,26 @@ def main():
         elif choice == "3":
             cars = repo.listAvailableCars()
             for car in cars:
+                print("-" * 30)
                 print(car)
+                
 
         elif choice == "4":
             cars = repo.listRentedCars()
             for car in cars:
+                print("-" * 30)
                 print(car)
+                
 
         elif choice == "5":
             car_id = int(input("Enter car ID: "))
             car = repo.findCarById(car_id)
-            print(car)
+            if car:
+                print("-" * 30)
+                print(car)
+            else:
+                print("Car with id: ", car_id, "not found")
+
 
         elif choice == "6":
             cust_id = int(input("Enter customer ID: "))
@@ -73,16 +82,25 @@ def main():
             email = input("Email: ")
             phone = input("Phone number: ")
             cust = Customer(cust_id, first, last, email, phone)
-            repo.addCustomer(cust)
+            if repo.addCustomer(cust):
+                print("Customer added successfully")
+            else:
+                print("Error in adding customer")
+
 
         elif choice == "7":
             cust_id = int(input("Enter customer ID to remove: "))
-            repo.removeCustomer(cust_id)
+            if repo.removeCustomer(cust_id):
+                print("Customer removed successfully")
+            else:
+                print("Error in removing customer")
+
 
         elif choice == "8":
             customers = repo.listCustomers()
-            for cust in customers:
-                print(cust)
+            for customer in customers:
+                print("-" * 30)
+                print(customer)
 
         elif choice == "9":
             cust_id = int(input("Enter customer ID: "))
@@ -118,7 +136,7 @@ def main():
             payment = Payment(None, lease_id, amount, date.today())
             repo.recordPayment(payment, amount)
 
-        elif choice == "0":
+        elif choice == "15":
             print("Thank You for Visiting\n")
             print("Exiting system...")
             break

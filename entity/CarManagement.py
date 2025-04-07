@@ -33,4 +33,15 @@ class Vehicle:
 
     def get_engineCapacity(self): return self.__engineCapacity
     def set_engineCapacity(self, engineCapacity): self.__engineCapacity = engineCapacity
+
+    def __str__(self):
+        return (f"Car ID: {self.__vehicleID}\n"
+            f"Make: {self.__make}\n"
+            f"Model: {self.__model}\n"
+            f"Year: {self.__year}\n"
+            f"Daily Rate: {self.__dailyRate}\n"
+            f"Passenger Capacity: {self.__passengerCapacity}\n"
+            f"Engine Capacity: {self.__engineCapacity}cc")
+
+
     

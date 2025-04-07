@@ -21,3 +21,10 @@ class Customer:
     def get_phoneNumber(self): return self.__phoneNumber
     def set_phoneNumber(self, phoneNumber): self.__phoneNumber = phoneNumber
 
+    def __str__(self):
+        return (f"Customer ID: {self.__customerID}\n"
+                f"First Name: {self.__firstName}\n"
+                f"Last Name: {self.__lastName}\n"
+                f"Email: {self.__email}\n"
+                f"Phone Number: {self.__phoneNumber}")
+
