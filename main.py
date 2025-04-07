@@ -38,14 +38,18 @@ def main():
             engineCapacity = int(input("Enter EngineCapacity: "))
             car = Vehicle(vehicleID, make, model, year, dailyRate, 1, passengerCapacity, engineCapacity)
             if repo.addCar(car):
-                print("Car Added")
+                print("Car Added Successfully")
             else:
-                print("Car is not added")
+                print("Error in adding a car")
 
         
         elif choice == "2":
             car_id = int(input("Enter car ID to remove: "))
-            repo.removeCar(car_id)
+            if repo.removeCar(car_id):
+                print("Car Removed Successfully")
+            else:
+                print("Error in removing a car")
+            
 
         elif choice == "3":
             cars = repo.listAvailableCars()
