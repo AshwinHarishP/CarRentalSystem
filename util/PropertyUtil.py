@@ -1,19 +1,20 @@
-import pyodbc
-
-DRIVER_NAME= "SQL Server"
-SERVER = "LAPTOP-2Q84MA0J\SQLEXPRESS"
-DATABASE = "CarRentalSystem"
-USERNAME = ""
-PASSWORD = ""
+import os
+import configparser
     
 class PropertyUtil:
     @staticmethod
     def getPropertyString():
+        path = os.path.join(os.path.dirname(__file__), 'db_config.properties')
+        config = configparser.ConfigParser()
+        config.read(path)
+
+        db_config = config['database']
         connectionString = (
-            f"Driver={DRIVER_NAME};"
-            f"Server={SERVER};"
-            f"Database={DATABASE};"
-            f"UID={USERNAME};"
-            f"PWD={PASSWORD};")
+            f"Driver={db_config['DRIVER_NAME']};"
+            f"Server={db_config['SERVER']};"
+            f"Database={db_config['DATABASE']};"
+            f"UID={db_config['USERNAME']};"
+            f"PWD={db_config['PASSWORD']};"
+        )
 
         return connectionString
