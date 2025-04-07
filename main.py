@@ -3,6 +3,9 @@ from entity.CarManagement import Vehicle
 from entity.CustomerManagement import Customer
 from entity.LeaseManagement import Lease
 from entity.PaymentHandling import Payment
+from myexceptions.CarNotFoundException import CarNotFoundException
+from myexceptions.LeaseNotFoundException import LeaseNotFoundException
+from myexceptions.CustomerNotFoundException import CustomerNotFoundException
 from datetime import date
 
 class CarRentalSystem:
@@ -54,15 +57,20 @@ class CarRentalSystem:
             
             elif choice == "2":
                 print("\nRemove Car\n")
-                car_id = int(input("Enter car ID to remove: "))
+                
+                try:
+                    car_id = int(input("Enter car ID to remove: "))
 
-                if not self.repo.findCarById(car_id):
-                    continue
+                    if not self.repo.findCarById(car_id):
+                        raise CarNotFoundException(f"Car with ID {car_id} does not exist.")
 
-                if self.repo.removeCar(car_id):
-                    print("Car Removed Successfully")
-                else:
-                    print("Error in removing a car")
+                    if self.repo.removeCar(car_id):
+                        print("Car Removed Successfully")
+                    else:
+                        print("Error in removing a car")
+
+                except CarNotFoundException as Error:
+                    print(f"Error in removing a car: {Error}")
                 
 
             elif choice == "3":
@@ -83,37 +91,60 @@ class CarRentalSystem:
 
             elif choice == "5":
                 print("\nFind Car by Car ID\n")
-                car_id = int(input("Enter car ID: "))
-                car = self.repo.findCarById(car_id)
-                if car:
-                    print("-" * 30)
-                    print(car)
+                
+                try:
+                    car_id = int(input("Enter car ID: "))
+                    car = self.repo.findCarById(car_id)
+                    if not car:
+                        raise CarNotFoundException(f"Car with ID {car_id} does not exist.")
+                    
+                    else:
+                        print("-" * 30)
+                        print(car)
+                
+                except CarNotFoundException as Error:
+                    print(f"Error in finding a car: {Error}")
 
             elif choice == "6":
                 print("\nAdd Customer\n")
-                cust_id = int(input("Enter customer ID: "))
-                first = input("First name: ")
-                last = input("Last name: ")
-                email = input("Email: ")
-                phone = input("Phone number: ")
-                cust = Customer(cust_id, first, last, email, phone)
-                if self.repo.addCustomer(cust):
-                    print("Customer added successfully")
-                else:
-                    print("Error in adding customer")
+
+                try:
+
+                    cust_id = int(input("Enter customer ID: "))
+                    if self.repo.findCustomerById(cust_id):
+                        raise CustomerNotFoundException(f"Customer with ID {cust_id} already exist.")
+                    
+                    else:
+                        first = input("First name: ")
+                        last = input("Last name: ")
+                        email = input("Email: ")
+                        phone = input("Phone number: ")
+                        cust = Customer(cust_id, first, last, email, phone)
+                        if self.repo.addCustomer(cust):
+                            print("Customer added successfully")
+                        else:
+                            print("Error in adding customer")
+
+                except CustomerNotFoundException as Error:
+                    print(f"Error in adding a : {Error}")
 
 
             elif choice == "7":
                 print("\nRemove Customer\n")
-                cust_id = int(input("Enter customer ID to remove: "))
                 
-                if not self.repo.findCustomerById(cust_id):
-                    continue
+                try:
+                    cust_id = int(input("Enter customer ID to remove: "))
+                
+                    if not self.repo.findCustomerById(cust_id):
+                        raise CustomerNotFoundException(f"Customer with ID {cust_id} does not exist.") 
 
-                if self.repo.removeCustomer(cust_id):
-                    print("Customer removed successfully")
-                else:
-                    print("Error in removing customer")
+                    if self.repo.removeCustomer(cust_id):
+                        print("Customer removed successfully")
+                    else:
+                        print("Error in removing customer")
+
+                except CustomerNotFoundException as Error:
+                    print(f"Error in removing a customer: {Error}")
 
 
             elif choice == "8":
@@ -126,63 +157,89 @@ class CarRentalSystem:
 
             elif choice == "9":
                 print("\nFind Customer by Customer ID\n")
-                cust_id = int(input("Enter customer ID: "))
-                if not self.repo.findCustomerById(cust_id):
-                    continue
 
-                customer = self.repo.findCustomerById(cust_id)
-                print(customer)
+                try:
+                    cust_id = int(input("Enter customer ID: "))
+                    if not self.repo.findCustomerById(cust_id):
+                        raise CustomerNotFoundException(f"Customer with ID {cust_id} does not exist.")  
+
+                    customer = self.repo.findCustomerById(cust_id)
+                    print(customer)
+
+                except CustomerNotFoundException as Error:
+                    print(f"Error in finding a customer: {Error}")
 
 
             elif choice == "10":
                 print("\nCreate Lease\n")
-                customer_id = int(input("Enter customer ID: "))
-                car_id = int(input("Enter car ID: "))
+                try:
 
-                if not self.repo.findCustomerById(customer_id):
-                    continue
+                    customer_id = int(input("Enter customer ID: "))
+                    car_id = int(input("Enter car ID: "))
 
-                elif not self.repo.findCarById(car_id):
-                    continue
+                    if not self.repo.findCustomerById(customer_id):
+                        raise CustomerNotFoundException(f"Customer with ID {customer_id} does not exist.")
+
+                    if not self.repo.findCarById(car_id):
+                        raise CarNotFoundException(f"Car with ID {car_id} does not exist.")
                 
-                else:
-                    start = input("Enter start date (YYYY-MM-DD): ")
-                    end = input("Enter end date (YYYY-MM-DD): ")
-                    print(" \n1. Monthy Lease \n2. Daily Lease")
-                    leaseInput = input("Enter Lease Type: ")
+                    else:
+                        start = input("Enter start date (YYYY-MM-DD): ")
+                        end = input("Enter end date (YYYY-MM-DD): ")
+                        print(" \n1. Monthy Lease \n2. Daily Lease")
+                        leaseInput = input("Enter Lease Type: ")
                     
-                    if leaseInput == "1":
-                        leaseType = "Monthly Lease"
-                    else:
-                        leaseType = "Daily Lease"
+                        if leaseInput == "1":
+                            leaseType = "Monthly Lease"
+                        else:
+                            leaseType = "Daily Lease"
 
-                    lease = self.repo.createLease(customer_id, car_id, date.fromisoformat(start), date.fromisoformat(end), leaseType)
-                    if lease:
-                        print("Lease Created Successfully")
-                    else:
-                        print("Error in creating a lease")
+                        lease = self.repo.createLease(customer_id, car_id, date.fromisoformat(start), date.fromisoformat(end), leaseType)
+                        if lease:
+                            print("Lease Created Successfully")
+                        else:
+                            print("Error in creating a lease")
+                
+                except CustomerNotFoundException as Error:
+                    print(f"Error in finding a customer: {Error}")
+                
+                except CarNotFoundException as Error:
+                    print(f"Error in finding a car: {Error}")
 
 
             elif choice == "11":
                 print("\nReturn a Car based on Lease ID\n")
-                lease_id = int(input("Enter lease ID: "))
-                lease, vehicle = self.repo.returnCar(lease_id)
 
-                if lease:
-                    print("\n\nLease Details\n")
-                    print("Lease ID:", lease.get_leaseID())
-                    print("Vehicle ID:", lease.get_vehicleID())
-                    print("Customer ID:", lease.get_customerID())
-                    print("Start Date:", lease.get_startDate())
-                    print("End Date:", lease.get_endDate())
-                    print("Lease Type:", lease.get_type())
+                try:
+                    lease_id = int(input("Enter lease ID: "))
+                    lease, vehicle = self.repo.returnCar(lease_id)
+
+                    if lease:
+                        print("\n\nLease Details\n")
+                        print("Lease ID:", lease.get_leaseID())
+                        print("Vehicle ID:", lease.get_vehicleID())
+                        print("Customer ID:", lease.get_customerID())
+                        print("Start Date:", lease.get_startDate())
+                        print("End Date:", lease.get_endDate())
+                        print("Lease Type:", lease.get_type())
+                        
+                        print("\n\nVehicle Info\n")
+                        print("Make:", vehicle["make"])
+                        print("Model:", vehicle["model"])
+                        print("Year:", vehicle["year"])
+                    elif not lease:
+                        raise LeaseNotFoundException(f"Lease with ID {lease_id} does not exist.")
                     
-                    print("\n\nVehicle Info\n")
-                    print("Make:", vehicle["make"])
-                    print("Model:", vehicle["model"])
-                    print("Year:", vehicle["year"])
-                else:
-                    print("No lease found with that ID.")
+                    else:
+                        raise CustomerNotFoundException(f"Customer with ID {cust_id} does not exist.") 
+            
+
+                except LeaseNotFoundException as Error:
+                    print(f"Error in returning a lease based on lease ID {lease_id}: {Error}")
+                    
+                
+                except CustomerNotFoundException as Error:
+                    print(f"Error in finding a customer: {Error}")
 
 
             elif choice == "12":
@@ -202,25 +259,45 @@ class CarRentalSystem:
 
             elif choice == "14":
                 print("\nFind Lease by Lease ID\n")
-                lease_id = int(input("Enter lease ID: "))
-                lease = self.repo.findLeaseById(lease_id)
-                if lease:
-                    print("-" * 30)
-                    print(lease)
-                else:
-                    continue
+                
+                try:
+                    lease_id = int(input("Enter lease ID: "))
+                    lease = self.repo.findLeaseById(lease_id)
+                    if lease:
+                        print("-" * 30)
+                        print(lease)
+                    else:
+                        raise LeaseNotFoundException(f"Lease with ID {lease_id} does not exist.")
+                
+                except LeaseNotFoundException as Error:
+                    print(f"Error in returning a lease based on lease ID {lease_id}: {Error}")
 
 
             elif choice == "15":
                 print("\nRecord Payment\n")
-                lease_id = int(input("Enter lease ID: "))
-                amount = float(input("Enter payment amount: "))
-                payment = Payment(None, lease_id, amount, date.today())
-                if self.repo.recordPayment(payment, amount):
-                    print("Amount added in Payments")
-                else:
-                    print("Unable to add payment")
+                
+                try:
+                    lease_id = int(input("Enter lease ID: "))
+                    amount = float(input("Enter payment amount: "))
 
+                    if not self.repo.findLeaseById(lease_id):
+                        raise LeaseNotFoundException(f"Lease with ID {lease_id} does not exist.")
+
+                    if amount < 0:
+                        raise ValueError("Amount should not be less than zero.")
+
+                    payment = Payment(None, lease_id, amount, date.today())
+
+                    if self.repo.recordPayment(payment, amount):
+                        print("Amount added in Payments")
+                    else:
+                        print("Unable to add payment")
+
+                except LeaseNotFoundException as Error:
+                    print(f"Error: {Error}")
+
+                except ValueError as Error:
+                    print(f"Invalid input: {Error}")
 
             elif choice == "16":
                 print("\nThank You for Visiting\n")

@@ -4,9 +4,6 @@ from dao.ICarLeaseRepository import ICarLeaseRepository
 from entity.CarManagement import Vehicle
 from entity.CustomerManagement import Customer
 from entity.LeaseManagement import Lease
-from myexceptions.CarNotFoundException import CarNotFoundException
-from myexceptions.LeaseNotFoundException import LeaseNotFoundException
-from myexceptions.CustomerNotFoundException import CustomerNotFoundException
 from datetime import date
 
 class ICarLeaseRepositoryImpl(ICarLeaseRepository):
@@ -115,13 +112,12 @@ class ICarLeaseRepositoryImpl(ICarLeaseRepository):
         try:
             query = "SELECT * FROM Vehicle WHERE vehicleID = ?;"
                     
-           
             self.cursor.execute(query, (car_id, ))
             row = self.cursor.fetchone()
 
             if row:
                 return Vehicle(*row)
-            raise CarNotFoundException(f"Car with ID {car_id} does not exist.")
+            return None
            
         except Exception as Error:
             print(f"Error in finding a car: {Error}")
@@ -167,9 +163,9 @@ class ICarLeaseRepositoryImpl(ICarLeaseRepository):
             # Check if lease exists for the customer
             check_lease_query = "SELECT leaseID FROM Lease WHERE customerID = ?;"
             self.cursor.execute(check_lease_query, (customer_id,))
-            lease_row = self.cursor.fetchone()
+            lease_rows = self.cursor.fetchall   ()
 
-            if lease_row:
+            for lease_row in lease_rows:
                 lease_id = lease_row[0]
 
                 # Delete payments linked to that lease
@@ -222,10 +218,10 @@ class ICarLeaseRepositoryImpl(ICarLeaseRepository):
 
             if row:
                 return Customer(*row)
-            else:
-                raise CustomerNotFoundException(f"Customer with ID {customer_id} does not exist.")
+            
+            return None
 
-        except CustomerNotFoundException as Error:
+        except Exception as Error:
             print(f"Error in finding a customer: {Error}")
             return None
 
@@ -346,15 +342,13 @@ class ICarLeaseRepositoryImpl(ICarLeaseRepository):
             
             if result:
                 return Lease(*result)
-            raise LeaseNotFoundException(f"Lease with ID {lease_id} does not exist.")
-            
-
+        
+            return None
+        
         except Exception as Error:
-            print(f"Error in returning a lease based on lease ID {lease_id}: {Error}")
-            return False
+            print(f"Error in finding lease By lease ID: {Error}")
             
 
-    
     def recordPayment(self, lease: Lease, amount: float) -> None:
         """
             Insert a record for payment after verifying the lease exists.
