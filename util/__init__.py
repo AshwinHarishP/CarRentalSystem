@@ -1,2 +1,2 @@
-from .DBConnection import DBConnection
-from .PropertyUtil import PropertyUtil
+from util import DBConnection
+from util import PropertyUtil
