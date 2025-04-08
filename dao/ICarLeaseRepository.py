@@ -7,57 +7,43 @@ from datetime import date
 class ICarLeaseRepository(ABC):
     
     @abstractmethod
-    def addCar(self, car: Vehicle) -> None:
-        pass
+    def addCar(self, car: Vehicle) -> None: ...
 
     @abstractmethod
-    def removeCar(self, car_id: int) -> None:
-        pass
+    def removeCar(self, car_id: int) -> None: ...
 
     @abstractmethod
-    def listAvailableCars(self) -> list[Vehicle]:
-        pass
+    def listAvailableCars(self) -> list[Vehicle]: ...
 
     @abstractmethod
-    def listRentedCars(self) -> list[Vehicle]:
-        pass
+    def listRentedCars(self) -> list[Vehicle]: ...
 
     @abstractmethod
-    def findCarById(self, car_id: int) -> Vehicle:
-        pass
+    def findCarById(self, car_id: int) -> Vehicle: ...
 
     @abstractmethod
-    def addCustomer(self, customer: Customer) -> None:
-        pass
+    def addCustomer(self, customer: Customer) -> None: ...
 
     @abstractmethod
-    def removeCustomer(self, customer_id: int) -> None:
-        pass
+    def removeCustomer(self, customer_id: int) -> None: ...
 
     @abstractmethod
-    def listCustomers(self) -> list[Customer]:
-        pass
+    def listCustomers(self) -> list[Customer]: ...
 
     @abstractmethod
-    def findCustomerById(self, customer_id: int) -> Customer:
-        pass
+    def findCustomerById(self, customer_id: int) -> Customer: ...
 
     @abstractmethod
-    def createLease(self, customer_id: int, car_id: int, start_date: date, end_date: date) -> Lease:
-        pass
+    def createLease(self, customer_id: int, car_id: int, start_date: date, end_date: date) -> Lease: ...
 
     @abstractmethod
-    def returnCar(self, lease_id: int) -> Lease:
-        pass
+    def returnCar(self, lease_id: int) -> Lease: ...
 
     @abstractmethod
-    def listActiveLeases(self) -> list[Lease]:
-        pass
+    def listActiveLeases(self) -> list[Lease]: ...
 
     @abstractmethod
-    def listLeaseHistory(self) -> list[Lease]:
-        pass
+    def listLeaseHistory(self) -> list[Lease]: ...
 
     @abstractmethod
-    def recordPayment(self, lease: Lease, amount: float) -> None:
-        pass
+    def recordPayment(self, lease: Lease, amount: float) -> None: ...

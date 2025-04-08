@@ -4,18 +4,29 @@ from dao.ICarLeaseRepository import ICarLeaseRepository
 from entity.CarManagement import Vehicle
 from entity.CustomerManagement import Customer
 from entity.LeaseManagement import Lease
+from myexceptions.CarNotFoundException import CarNotFoundException
+from myexceptions.CustomerNotFoundException import CustomerNotFoundException
+from myexceptions.LeaseNotFoundException import LeaseNotFoundException
 from datetime import date
 
 class ICarLeaseRepositoryImpl(ICarLeaseRepository):
-    connection = DBConnection.getConnection()
-    cursor = connection.cursor()
+    def __init__(self):
+        self.connection = DBConnection.getConnection()
+        self.cursor = self.connection.cursor()
    
+
     def addCar(self, car: Vehicle) -> None:
         """
-            Function to add Car
+            Function to add Car if not exist
         """
         
         try:
+            check_query = "SELECT 1 FROM Vehicle WHERE vehicleID = ?;"
+            self.cursor.execute(check_query, (car.get_vehicleID(),))
+            if self.cursor.fetchone():
+                print(f"\nCar with ID {car.get_vehicleID()} already exists.")
+                return False
+
             query = """
                      INSERT INTO Vehicle(vehicleID, make, model, year, dailyRate, status, passengerCapacity, engineCapacity) 
                      VALUES(?, ?, ?, ?, ?, ?, ?, ?);
@@ -33,7 +44,7 @@ class ICarLeaseRepositoryImpl(ICarLeaseRepository):
             ))
             self.connection.commit()
             return True
-           
+
         except Exception as Error:
              print(f"Error in adding a car: {Error}")
              return False
@@ -117,13 +128,17 @@ class ICarLeaseRepositoryImpl(ICarLeaseRepository):
 
             if row:
                 return Vehicle(*row)
-            return None
-           
+
+            raise CarNotFoundException(f"Car with ID {car_id} does not exist.")
+            return False
+
+        except CarNotFoundException:
+            raise
+
         except Exception as Error:
             print(f"Error in finding a car: {Error}")
             return None
 
-    
     def addCustomer(self, customer: Customer) -> None:
         
         """
@@ -145,7 +160,7 @@ class ICarLeaseRepositoryImpl(ICarLeaseRepository):
                 customer.get_phoneNumber()
             ))
             
-            self.cursor.commit()
+            self.connection.commit()
             return True
            
         except Exception as Error:
@@ -163,7 +178,7 @@ class ICarLeaseRepositoryImpl(ICarLeaseRepository):
             # Check if lease exists for the customer
             check_lease_query = "SELECT leaseID FROM Lease WHERE customerID = ?;"
             self.cursor.execute(check_lease_query, (customer_id,))
-            lease_rows = self.cursor.fetchall   ()
+            lease_rows = self.cursor.fetchall()
 
             for lease_row in lease_rows:
                 lease_id = lease_row[0]
@@ -180,7 +195,7 @@ class ICarLeaseRepositoryImpl(ICarLeaseRepository):
             delete_customer_query = "DELETE FROM Customer WHERE customerID = ?;"
             self.cursor.execute(delete_customer_query, (customer_id,))
 
-            self.cursor.commit()
+            self.connection.commit()
             return True
 
         except Exception as Error:
@@ -219,10 +234,13 @@ class ICarLeaseRepositoryImpl(ICarLeaseRepository):
             if row:
                 return Customer(*row)
             
-            return None
+            raise CustomerNotFoundException(f"Customer with ID {customer_id} does not exist.")
+            
+        except CustomerNotFoundException:
+            raise
 
         except Exception as Error:
-            print(f"Error in finding a customer: {Error}")
+            print(f"Unexpected error while finding customer: {Error}")
             return None
 
     
@@ -255,16 +273,15 @@ class ICarLeaseRepositoryImpl(ICarLeaseRepository):
                                 UPDATE Vehicle SET status = 0 
                                 WHERE vehicleID = ?
                                 """
-            self.cursor.execute(updateStatusQuery, (car_id))
+            self.cursor.execute(updateStatusQuery, (car_id, ))
             self.connection.commit()
             return Lease(lease_id, car_id, customer_id, start_date, end_date, type)
 
         except Exception as Error:
             print(f"Error in inserting a lease record: {Error}")
-            return None
+            return False
 
 
-    
     def returnCar(self, lease_id: int) -> Lease:
         """
             Returning a car details and lease details by lease_id
@@ -343,11 +360,14 @@ class ICarLeaseRepositoryImpl(ICarLeaseRepository):
             if result:
                 return Lease(*result)
         
-            return None
+            raise LeaseNotFoundException(f"Lease with ID {lease_id} does not exist.")
         
+        except LeaseNotFoundException:
+            raise
+
         except Exception as Error:
-            print(f"Error in finding lease By lease ID: {Error}")
-            
+            print(f"Unexpected error while finding Lease: {Error}")
+            return None            
 
     def recordPayment(self, lease: Lease, amount: float) -> None:
         """
@@ -356,8 +376,8 @@ class ICarLeaseRepositoryImpl(ICarLeaseRepository):
         
         try:
 
-            lease_id = self.findLeaseById(lease.get_leaseID())
-            if not lease_id:
+            lease_obj = self.findLeaseById(lease.get_leaseID())
+            if not lease_obj:
                 return False
 
             # Get the next paymentID
@@ -379,5 +399,16 @@ class ICarLeaseRepositoryImpl(ICarLeaseRepository):
             print(f"Error in recording payment: {Error}")
             return False
 
+    def closeConnection(self):
+        try:
+            if self.cursor:
+                self.cursor.close()
+
+            if self.connection:
+                self.connection.close()
+            print("Database connection closed successfully.\n\n")
+
+        except Exception as Error:
+            print(f"Error while closing database connection: {Error}")
 
 
