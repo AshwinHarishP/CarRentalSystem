@@ -289,8 +289,8 @@ class CarRentalSystem:
                         if not self.repo.findLeaseById(lease_id):
                             raise LeaseNotFoundException(f"Lease with ID {lease_id} does not exist.")
 
-                        if amount < 0:
-                            raise ValueError("Amount should not be less than zero.")
+                        if amount <= 0:
+                            raise ValueError("Amount should not be less than zero or equal to zero.")
 
                         payment = Payment(None, lease_id, amount, date.today())
 

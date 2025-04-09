@@ -25,7 +25,7 @@ class Lease:
     def get_type(self): return self.__type
     def set_type(self, type): self.__type = type
 
-    def __str__(self):
+    def __repr__(self):
         return (
             f"Lease ID: {self.__leaseID}\n"
             f"Vehicle ID: {self.__vehicleID}\n"
